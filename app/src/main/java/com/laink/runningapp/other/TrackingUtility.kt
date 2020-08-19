@@ -7,6 +7,7 @@ import pub.devrel.easypermissions.EasyPermissions
 
 object TrackingUtility {
 
+    // To check if the user already accepted location permission or not
     fun hasLocationPermissions(context: Context) =
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             EasyPermissions.hasPermissions(
