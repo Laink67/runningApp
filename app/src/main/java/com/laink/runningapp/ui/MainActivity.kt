@@ -1,19 +1,15 @@
 package com.laink.runningapp.ui
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.laink.runningapp.R
-import com.laink.runningapp.db.RunDAO
-import com.laink.runningapp.other.Constants
 import com.laink.runningapp.other.Constants.ACTION_SHOW_TRACKING_FRAGMENT
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -25,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         // Our MainActivity could be destroyed but our service is still running
         // and if we then send PendingIntent that would mean that our MainActivity would be relaunched
         // It will go inside onCreate() again
-        navigateToTrackingFragmentIfNeeded(intent) // if pur activity launched by notification
+        navigateToTrackingFragmentIfNeeded(intent) // if our activity launched by notification
 
         setSupportActionBar(toolbar)
         bottomNavigationView.setupWithNavController(navHostFragment.findNavController())

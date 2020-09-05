@@ -62,6 +62,7 @@ class RunFragment : Fragment(R.layout.fragment_run), EasyPermissions.PermissionC
 
     override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>) {
         if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
+            // Dialog that lead user to app settings where user can finally enable the permissions
             AppSettingsDialog.Builder(this).build().show()
         } else {
             requestPermission()
