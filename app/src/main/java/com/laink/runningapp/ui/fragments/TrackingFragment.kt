@@ -18,6 +18,7 @@ import com.laink.runningapp.other.Constants.BTN_TOGGLE_RUN_STOP
 import com.laink.runningapp.other.Constants.MAP_ZOOM
 import com.laink.runningapp.other.Constants.POLYLINE_COLOR
 import com.laink.runningapp.other.Constants.POLYLINE_WIDTH
+import com.laink.runningapp.other.TrackingUtility
 import com.laink.runningapp.services.Polyline
 import com.laink.runningapp.services.TrackingService
 import com.laink.runningapp.ui.viewmodels.MainViewModel
@@ -34,6 +35,8 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
     private var pathPoints = mutableListOf<Polyline>()
 
     private var map: GoogleMap? = null
+
+    private var currentTimeMillis = 0L
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -62,6 +65,13 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
 
             addLatestPolyline()
             moveCameraToUser()
+        })
+
+        TrackingService.timeRunInMillis.observe(viewLifecycleOwner, Observer {
+            currentTimeMillis = it
+            val formattedTime = TrackingUtility.getFormattedStopWatchTime(currentTimeMillis, true)
+
+            tvTimer.text = formattedTime
         })
     }
 

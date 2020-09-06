@@ -32,9 +32,14 @@ import com.laink.runningapp.other.Constants.LOCATION_UPDATE_INTERVAL
 import com.laink.runningapp.other.Constants.NOTIFICATION_CHANNEL_ID
 import com.laink.runningapp.other.Constants.NOTIFICATION_CHANNEL_NAME
 import com.laink.runningapp.other.Constants.NOTIFICATION_ID
+import com.laink.runningapp.other.Constants.TIMER_UPDATE_INTERVAL
 import com.laink.runningapp.other.Constants.TITLE_APP
 import com.laink.runningapp.other.TrackingUtility
 import com.laink.runningapp.ui.MainActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 typealias Polyline = MutableList<LatLng>
@@ -49,7 +54,12 @@ class TrackingService : LifecycleService() {
     // To be able to request those location updates
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
+    // For notification showing
+    private val timeRunInSeconds = MutableLiveData<Long>()
+
     companion object {
+        // For fragment showing
+        val timeRunInMillis = MutableLiveData<Long>()
         val isTracking = MutableLiveData<Boolean>()
 
         // points of our run path
@@ -59,6 +69,8 @@ class TrackingService : LifecycleService() {
     private fun postInitialValues() {
         isTracking.postValue(false)
         pathPoints.postValue(mutableListOf())
+        timeRunInSeconds.postValue(0L)
+        timeRunInMillis.postValue(0L)
     }
 
     override fun onCreate() {
@@ -89,8 +101,43 @@ class TrackingService : LifecycleService() {
         }
     }
 
+    private var isTimerEnabled = false
+    private var lapTime = 0L
+    private var timeRun = 0L
+    private var timeStarted = 0L
+    private var lastSecondTimestamp = 0L
+
+    private fun startTimer() {
+        addEmptyPolyline()
+        isTracking.postValue(true)
+        timeStarted = System.currentTimeMillis()
+        isTimerEnabled = true
+
+        // we don't need observers all the time - it's a bad practice. Then we'll use coroutine
+        CoroutineScope(Dispatchers.Main).launch {
+            while (isTracking.value!!) {
+                // time difference between now and timeStarted
+                lapTime = System.currentTimeMillis() - timeStarted
+
+                // post the new lapTime
+                timeRunInMillis.postValue(timeRun + lapTime)
+
+                if (timeRunInMillis.value!! >= lastSecondTimestamp + 1000L) {
+                    timeRunInSeconds.postValue(timeRunInSeconds.value!! + 1)
+                    lastSecondTimestamp += 1000L
+                }
+
+                // for updating each 50 milliseconds
+                delay(TIMER_UPDATE_INTERVAL)
+            }
+
+            timeRun += lapTime
+        }
+    }
+
     private fun pauseService() {
         isTracking.postValue(false)
+        isTimerEnabled = false
     }
 
     // Update our location tracking
@@ -143,6 +190,7 @@ class TrackingService : LifecycleService() {
                         isFirstRun = false
                     } else {
                         Timber.d("Resuming service...")
+                        startTimer()
                     }
                 }
                 ACTION_PAUSE_SERVICE -> {
@@ -159,7 +207,7 @@ class TrackingService : LifecycleService() {
     }
 
     private fun startForegroundService() {
-        addEmptyPolyline()
+        startTimer()
         isTracking.postValue(true)
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE)
