@@ -89,6 +89,10 @@ class TrackingService : LifecycleService() {
         }
     }
 
+    private fun pauseService() {
+        isTracking.postValue(false)
+    }
+
     // Update our location tracking
     @SuppressLint("MissingPermission")
     private fun updateLocationTracking(isTracking: Boolean) {
@@ -143,6 +147,7 @@ class TrackingService : LifecycleService() {
                 }
                 ACTION_PAUSE_SERVICE -> {
                     Timber.d("Paused service")
+                    pauseService()
                 }
                 ACTION_STOP_SERVICE -> {
                     Timber.d("Stop service")
