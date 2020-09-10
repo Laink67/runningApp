@@ -8,6 +8,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolygonOptions
 import com.google.android.gms.maps.model.PolylineOptions
 import com.laink.runningapp.R
@@ -33,7 +34,6 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
 
     private var isTracking = false
     private var pathPoints = mutableListOf<Polyline>()
-
     private var map: GoogleMap? = null
 
     private var currentTimeMillis = 0L
@@ -131,6 +131,12 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
 
             // drawing that polyline
             map?.addPolyline(polylineOptions)
+
+
+//            val marker = map?.addMarker(MarkerOptions().position(preLastLatLng))
+
+//            marker?.remove()
+//            map?.addMarker(MarkerOptions().position(lastLatLng))
         }
     }
 

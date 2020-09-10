@@ -37,18 +37,21 @@ object TrackingUtility {
         val seconds = TimeUnit.MILLISECONDS.toSeconds(milliseconds)
 
         if (!includeMillis) {
-            return "${if (hours < 10) "0" else ""}$hours:" +
-                    "${if (minutes < 10) "0" else ""}$minutes:" +
-                    "${if (seconds < 10) "0" else ""}$seconds"
+            return "${checkTheNeedZero(hours)}:" +
+                    "${checkTheNeedZero(minutes)}:" +
+                    checkTheNeedZero(seconds)
         }
 
         milliseconds -= TimeUnit.SECONDS.toMillis(seconds)
         // For getting two digit number (not three)
         milliseconds /= 10
 
-        return "${if (hours < 10) "0" else ""}$hours:" +
-                "${if (minutes < 10) "0" else ""}$minutes:" +
-                "${if (seconds < 10) "0" else ""}$seconds:" +
-                "${if (milliseconds < 10) "0" else ""}$milliseconds"
+        return "${checkTheNeedZero(hours)}:" +
+                "${checkTheNeedZero(minutes)}:" +
+                "${checkTheNeedZero(seconds)}:" +
+                checkTheNeedZero(milliseconds)
     }
+
+    private fun checkTheNeedZero(time: Long) =
+        "${if (time < 10) "0" else ""}$time"
 }
