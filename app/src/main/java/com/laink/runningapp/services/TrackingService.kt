@@ -54,6 +54,7 @@ typealias Polylines = MutableList<Polyline>
 class TrackingService : LifecycleService() {
 
     var isFirstRun = true
+    var isServiceKilled = false
 
     @Inject
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient // To be able to request those location updates
@@ -86,7 +87,6 @@ class TrackingService : LifecycleService() {
 
         currentNotificationBuilder = baseNotificationBuilder
         postInitialValues()
-        fusedLocationProviderClient = FusedLocationProviderClient(this)
 
         isTracking.observe(this, Observer {
             updateLocationTracking(it)
@@ -174,13 +174,16 @@ class TrackingService : LifecycleService() {
             isAccessible = true // Allow to modify that
             set(currentNotificationBuilder, ArrayList<NotificationCompat.Action>())
         }
-        currentNotificationBuilder =
-            baseNotificationBuilder.addAction(
-                R.drawable.ic_pause_black_24dp,
-                notificationActionText,
-                pendingIntent
-            )
-        notificationManager.notify(NOTIFICATION_ID, currentNotificationBuilder.build())
+
+        if (!isServiceKilled) {
+            currentNotificationBuilder =
+                baseNotificationBuilder.addAction(
+                    R.drawable.ic_pause_black_24dp,
+                    notificationActionText,
+                    pendingIntent
+                )
+            notificationManager.notify(NOTIFICATION_ID, currentNotificationBuilder.build())
+        }
     }
 
     // Update our location tracking
@@ -222,6 +225,15 @@ class TrackingService : LifecycleService() {
         pathPoints.postValue(this)
     } ?: pathPoints.postValue(mutableListOf(mutableListOf()))
 
+    private fun killService() {
+        isServiceKilled = true
+        isFirstRun = true
+        pauseService()
+        postInitialValues()
+        stopForeground(true)
+        stopSelf()
+    }
+
     // Get called whenever we send a command to our service so whenever we send an intent to this service class
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
@@ -243,6 +255,7 @@ class TrackingService : LifecycleService() {
                 }
                 ACTION_STOP_SERVICE -> {
                     Timber.d("Stop service")
+                    killService()
                 }
             }
         }
@@ -263,13 +276,17 @@ class TrackingService : LifecycleService() {
         startForeground(NOTIFICATION_ID, baseNotificationBuilder.build())
 
         timeRunInSeconds.observe(this, Observer {
-            val notification = currentNotificationBuilder
-                .setContentText(
-                    TrackingUtility.getFormattedStopWatchTime(
-                        it * ONE_SECOND_IN_MILLIS
+            // We killed service, notification is deleted, but timeRunInSeconds is still observed
+            // Then we create new notification that we don't want
+            if (!isServiceKilled) {
+                val notification = currentNotificationBuilder
+                    .setContentText(
+                        TrackingUtility.getFormattedStopWatchTime(
+                            it * ONE_SECOND_IN_MILLIS
+                        )
                     )
-                )
-            notificationManager.notify(NOTIFICATION_ID, notification.build())
+                notificationManager.notify(NOTIFICATION_ID, notification.build())
+            }
         })
     }
 
