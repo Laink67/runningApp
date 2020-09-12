@@ -14,6 +14,8 @@ class MainViewModel @ViewModelInject constructor(
 // in mainRepository we need only one parameter runDao and Dagger Hilt know how to get this (we have provideRunDao function)
 ) : ViewModel() {
 
+    val runsByDate = mainRepository.getAllRunsByDate()
+
     fun insertRun(run: Run) = viewModelScope.launch {
         mainRepository.insertRun(run)
     }

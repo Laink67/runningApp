@@ -41,4 +41,6 @@ object Constants {
     const val PADDING_MAP_FOR_SCREENSHOT = 0.05F
 
     const val SUCCESSFUL_RUN_SAVING_MESSAGE = "Run saved successfully"
+
+    const val DATE_FORMAT = "dd.MM.yy"
 }
