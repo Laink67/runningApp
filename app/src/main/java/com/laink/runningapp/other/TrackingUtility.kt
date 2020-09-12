@@ -2,9 +2,12 @@ package com.laink.runningapp.other
 
 import android.Manifest
 import android.content.Context
+import android.location.Location
 import android.os.Build
+import com.laink.runningapp.services.Polyline
 import pub.devrel.easypermissions.EasyPermissions
 import java.util.concurrent.TimeUnit
+import kotlin.math.round
 
 object TrackingUtility {
 
@@ -54,4 +57,31 @@ object TrackingUtility {
 
     private fun checkTheNeedZero(time: Long) =
         "${if (time < 10) "0" else ""}$time"
+
+    fun calculatePolylineLength(polyline: Polyline): Float {
+        var distance = 0f
+
+        for (i in 0..polyline.size - 2) {
+            val firstPosition = polyline[i]
+            val nextPosition = polyline[i + 1]
+            val result = FloatArray(1)
+
+            Location.distanceBetween(
+                firstPosition.latitude,
+                firstPosition.longitude,
+                nextPosition.latitude,
+                nextPosition.longitude,
+                result
+            )
+
+            distance += result[0]
+        }
+
+        return distance
+    }
+
+    // To get in seconds, then in minutes, then in hours
+    fun getFloatHoursFromMS(ms: Long): Float = ms / 1000f / 60 / 60
+
+    fun roundToDecimal(number: Float) = round(number * 10) / 10f
 }

@@ -37,4 +37,8 @@ object Constants {
     const val NOTIFICATION_RESUME_TEXT = "Resume"
 
     const val M_ACTIONS = "mActions"
+
+    const val PADDING_MAP_FOR_SCREENSHOT = 0.05F
+
+    const val SUCCESSFUL_RUN_SAVING_MESSAGE = "Run saved successfully"
 }

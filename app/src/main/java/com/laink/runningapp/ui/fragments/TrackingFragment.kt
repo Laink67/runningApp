@@ -3,32 +3,36 @@ package com.laink.runningapp.ui.fragments
 import android.content.Intent
 import android.os.Bundle
 import android.view.*
-import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.maps.model.PolygonOptions
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.laink.runningapp.R
+import com.laink.runningapp.db.Run
 import com.laink.runningapp.other.Constants.ACTION_PAUSE_SERVICE
 import com.laink.runningapp.other.Constants.ACTION_START_OR_RESUME_SERVICE
 import com.laink.runningapp.other.Constants.ACTION_STOP_SERVICE
 import com.laink.runningapp.other.Constants.BTN_TOGGLE_RUN_START
 import com.laink.runningapp.other.Constants.BTN_TOGGLE_RUN_STOP
 import com.laink.runningapp.other.Constants.MAP_ZOOM
+import com.laink.runningapp.other.Constants.PADDING_MAP_FOR_SCREENSHOT
 import com.laink.runningapp.other.Constants.POLYLINE_COLOR
 import com.laink.runningapp.other.Constants.POLYLINE_WIDTH
+import com.laink.runningapp.other.Constants.SUCCESSFUL_RUN_SAVING_MESSAGE
 import com.laink.runningapp.other.TrackingUtility
 import com.laink.runningapp.services.Polyline
 import com.laink.runningapp.services.TrackingService
 import com.laink.runningapp.ui.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_tracking.*
+import java.util.*
+import kotlin.math.round
 
 @AndroidEntryPoint
 class TrackingFragment : Fragment(R.layout.fragment_tracking) {
@@ -43,6 +47,8 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
     private var currentTimeMillis = 0L
 
     private var menu: Menu? = null
+
+    private var weight = 75f
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -103,6 +109,11 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
 
         btnToggleRun.setOnClickListener {
             toggleRun()
+        }
+
+        btnFinishRun.setOnClickListener {
+            zoomToSeeWholeTrack()
+            finishRunAndSaveToDb()
         }
 
         mapView.getMapAsync {
@@ -167,6 +178,59 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
         }
     }
 
+    private fun zoomToSeeWholeTrack() {
+        val bounds = LatLngBounds.Builder()
+
+        for (polyline in pathPoints) {
+            for (position in polyline) {
+                bounds.include(position)
+            }
+        }
+
+        map?.moveCamera(
+            CameraUpdateFactory.newLatLngBounds(
+                bounds.build(),
+                mapView.width,
+                mapView.height,
+                (mapView.height * PADDING_MAP_FOR_SCREENSHOT).toInt()
+            )
+        )
+    }
+
+    private fun finishRunAndSaveToDb() {
+        map?.snapshot { bitmap ->
+            var distanceInMeters = 0
+
+            for (polyline in pathPoints) {
+                distanceInMeters += TrackingUtility.calculatePolylineLength(polyline).toInt()
+            }
+
+            val avgSpeed =
+                TrackingUtility.roundToDecimal(
+                    distanceInMeters / 1000F
+                ) / (TrackingUtility.getFloatHoursFromMS(currentTimeMillis))
+            val dateTimeStamp = Calendar.getInstance().timeInMillis
+            val caloriesBurned = ((distanceInMeters / 1000F) * weight).toInt()
+            val run = Run(
+                bitmap,
+                dateTimeStamp,
+                avgSpeed,
+                distanceInMeters,
+                currentTimeMillis,
+                caloriesBurned
+            )
+
+            viewModel.insertRun(run)
+
+            Snackbar.make(
+                requireView(),//////////////////////////////
+                SUCCESSFUL_RUN_SAVING_MESSAGE,
+                Snackbar.LENGTH_LONG
+            ).show()
+
+            stopRun()
+        }
+    }
 
     private fun addAllPolylines() {
         for (polyline in pathPoints) {
