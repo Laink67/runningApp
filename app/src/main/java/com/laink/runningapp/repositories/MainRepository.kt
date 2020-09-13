@@ -17,7 +17,7 @@ class MainRepository @Inject constructor(
 
     fun getAllRunsByDistance() = runDao.getAllByDistance()
 
-    fun getAllRunsaByAvgSpeed() = runDao.getAllByAvgSpeed()
+    fun getAllRunsByAvgSpeed() = runDao.getAllByAvgSpeed()
 
     fun getAllRunsByTimeInMillis() = runDao.getAllByTimeInMillis()
 

@@ -4,6 +4,7 @@ import android.Manifest
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.AdapterView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
@@ -13,6 +14,7 @@ import com.laink.runningapp.R
 import com.laink.runningapp.adapters.RunAdapter
 import com.laink.runningapp.other.Constants.MESSAGE_LOCATION_PERMISSION
 import com.laink.runningapp.other.Constants.REQUEST_CODE_LOCATION_PERMISSION
+import com.laink.runningapp.other.SortedType
 import com.laink.runningapp.other.TrackingUtility
 import com.laink.runningapp.ui.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,12 +36,43 @@ class RunFragment : Fragment(R.layout.fragment_run), EasyPermissions.PermissionC
         requestPermission()
         setUpRecyclerView()
 
-        viewModel.runsByDate.observe(viewLifecycleOwner, Observer {
+        when (viewModel.sortedType) {
+            SortedType.DATE -> spFilter.setSelection(0)
+            SortedType.RUNNING_TIME -> spFilter.setSelection(1)
+            SortedType.DISTANCE -> spFilter.setSelection(2)
+            SortedType.AVG_SPEED -> spFilter.setSelection(3)
+            SortedType.CALORIES_BURNED -> spFilter.setSelection(4)
+        }
+
+        clickOnSpinnerItem()
+
+        viewModel.runs.observe(viewLifecycleOwner, Observer {
             runAdapter.submitList(it)
         })
 
         fab.setOnClickListener {
             findNavController().navigate(R.id.action_runFragment_to_trackingFragment)
+        }
+    }
+
+    private fun clickOnSpinnerItem(){
+        spFilter.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                adapterView: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                when (position) {
+                    0 -> viewModel.sortRuns(SortedType.DATE)
+                    1 -> viewModel.sortRuns(SortedType.RUNNING_TIME)
+                    2 -> viewModel.sortRuns(SortedType.DISTANCE)
+                    3 -> viewModel.sortRuns(SortedType.AVG_SPEED)
+                    4 -> viewModel.sortRuns(SortedType.CALORIES_BURNED)
+                }
+            }
+
+            override fun onNothingSelected(p0: AdapterView<*>?) {}
         }
     }
 
