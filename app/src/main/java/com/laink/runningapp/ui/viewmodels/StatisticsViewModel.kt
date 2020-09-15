@@ -10,4 +10,11 @@ class StatisticsViewModel @ViewModelInject constructor(
     val mainRepository: MainRepository // We don't need to define new function to provide repository in AppModule because
 // in mainRepository we need only one parameter runDao and Dagger Hilt know how to get this (we have provideRunDao function)
 ) : ViewModel() {
+
+    val totalTimeRun = mainRepository.getTotalTimeInMillis()
+    val totalDistance = mainRepository.getTotalDistance()
+    val totalCaloriesBurned = mainRepository.getTotalCaloriesBurned()
+    val totalAvgSpeed = mainRepository.getTotalAvgSpeed()
+
+    val runsByDate = mainRepository.getAllRunsByDate()
 }
