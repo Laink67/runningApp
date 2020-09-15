@@ -43,10 +43,12 @@ object Constants {
     const val SUCCESSFUL_RUN_SAVING_MESSAGE = "Run saved successfully"
 
     const val DATE_FORMAT = "dd.MM.yy"
+    const val START_TIME = "00:00:00:00"
 
     const val SHARED_PREFERENCES_NAME = "sharedPref"
     const val KEY_FIRST_TIME_TOGGLE = "KEY_FIRST_TIME_TOGGLE"
     const val KEY_NAME = "KEY_NAME"
     const val KEY_WEIGHT = "KEY_WEIGHT"
 
+    const val CANCEL_TRACKING_DIALOG_TAG = "CancelDialog"
 }

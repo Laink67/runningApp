@@ -7,36 +7,34 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.laink.runningapp.R
-import com.laink.runningapp.adapters.RunAdapter
 import com.laink.runningapp.db.Run
 import com.laink.runningapp.other.Constants.ACTION_PAUSE_SERVICE
 import com.laink.runningapp.other.Constants.ACTION_START_OR_RESUME_SERVICE
 import com.laink.runningapp.other.Constants.ACTION_STOP_SERVICE
 import com.laink.runningapp.other.Constants.BTN_TOGGLE_RUN_START
 import com.laink.runningapp.other.Constants.BTN_TOGGLE_RUN_STOP
+import com.laink.runningapp.other.Constants.CANCEL_TRACKING_DIALOG_TAG
 import com.laink.runningapp.other.Constants.MAP_ZOOM
 import com.laink.runningapp.other.Constants.PADDING_MAP_FOR_SCREENSHOT
 import com.laink.runningapp.other.Constants.POLYLINE_COLOR
 import com.laink.runningapp.other.Constants.POLYLINE_WIDTH
+import com.laink.runningapp.other.Constants.START_TIME
 import com.laink.runningapp.other.Constants.SUCCESSFUL_RUN_SAVING_MESSAGE
 import com.laink.runningapp.other.TrackingUtility
 import com.laink.runningapp.services.Polyline
 import com.laink.runningapp.services.TrackingService
+import com.laink.runningapp.ui.CancelTrackingDialog
 import com.laink.runningapp.ui.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.fragment_run.*
 import kotlinx.android.synthetic.main.fragment_tracking.*
 import java.util.*
 import javax.inject.Inject
-import kotlin.math.round
 
 @AndroidEntryPoint
 class TrackingFragment : Fragment(R.layout.fragment_tracking) {
@@ -79,22 +77,15 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
     }
 
     private fun showCancelRunDialog() {
-        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.AlertDialogTheme)
-            .setTitle("Cancel the run?")
-            .setMessage("Are you sure to cancel the current run and delete all its data?")
-            .setIcon(R.drawable.ic_delete)
-            .setPositiveButton("Yes") { _, _ ->
+        CancelTrackingDialog().apply {
+            setPositiveAnswer {
                 stopRun()
             }
-            .setNegativeButton("No") { dialogInterface, _ ->
-                dialogInterface.cancel()
-            }
-            .create()
-
-        dialog.show()
+        }.show(parentFragmentManager, CANCEL_TRACKING_DIALOG_TAG)
     }
 
     private fun stopRun() {
+        tvTimer.text = START_TIME
         sendCommandServiceToService(ACTION_STOP_SERVICE)
         findNavController().navigate(R.id.action_trackingFragment_to_runFragment)
     }
@@ -111,6 +102,17 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mapView.onCreate(savedInstanceState)
+
+        // if we clicked on cancel and rotated device
+        if (savedInstanceState != null) {
+            val cancelTrackingDialog = parentFragmentManager.findFragmentByTag(
+                CANCEL_TRACKING_DIALOG_TAG
+            ) as CancelTrackingDialog?
+
+            cancelTrackingDialog?.setPositiveAnswer {
+                stopRun()
+            }
+        }
 
         btnToggleRun.setOnClickListener {
             toggleRun()
@@ -162,10 +164,10 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
     private fun updateTracking(isTracking: Boolean) {
         this.isTracking = isTracking
 
-        if (!isTracking) {
+        if (!isTracking && currentTimeMillis > 0) {
             btnToggleRun.text = BTN_TOGGLE_RUN_START
             btnFinishRun.visibility = View.VISIBLE
-        } else {
+        } else if (isTracking) {
             btnToggleRun.text = BTN_TOGGLE_RUN_STOP
             menu?.getItem(0)?.isVisible = true
             btnFinishRun.visibility = View.GONE
@@ -228,7 +230,7 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
             viewModel.insertRun(run)
 
             Snackbar.make(
-                requireView(),//////////////////////////////
+                requireView(),
                 SUCCESSFUL_RUN_SAVING_MESSAGE,
                 Snackbar.LENGTH_LONG
             ).show()
