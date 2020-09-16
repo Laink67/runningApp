@@ -78,7 +78,7 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
 
     private fun showCancelRunDialog() {
         CancelTrackingDialog().apply {
-            setPositiveAnswer {
+            setPositiveListener {
                 stopRun()
             }
         }.show(parentFragmentManager, CANCEL_TRACKING_DIALOG_TAG)
@@ -109,7 +109,7 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
                 CANCEL_TRACKING_DIALOG_TAG
             ) as CancelTrackingDialog?
 
-            cancelTrackingDialog?.setPositiveAnswer {
+            cancelTrackingDialog?.setPositiveListener {
                 stopRun()
             }
         }

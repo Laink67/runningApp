@@ -39,7 +39,7 @@ class SetupFragment : Fragment(R.layout.fragment_setup) {
             )
         }
 
-        tvContinue.setOnClickListener {
+        btNext.setOnClickListener {
             val success = writePersonalDateToSharedPreferences()
 
             if (success) {

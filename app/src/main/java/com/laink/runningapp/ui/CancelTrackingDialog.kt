@@ -10,7 +10,7 @@ class CancelTrackingDialog : DialogFragment() {
 
     private var positiveListener: (() -> Unit)? = null
 
-    fun setPositiveAnswer(listener: () -> Unit) {
+    fun setPositiveListener(listener: () -> Unit) {
         positiveListener = listener
     }
 
